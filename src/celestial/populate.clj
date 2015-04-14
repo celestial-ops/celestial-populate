@@ -13,7 +13,6 @@
   "A tool for populating Celestial with data in production envs"
   (:gen-class true)
   (:require 
-    [clojure.core.strint :refer (<<)]
     [cheshire.core :refer :all]
     [slingshot.slingshot :refer  [throw+ try+]]
     [celestial.common :refer (import-logging)]
@@ -37,6 +36,8 @@
    [args]
   )
 
-(defn -main [url user pass & args]
+(defn -main 
+  "import files from path matching expected structure"
+  [path & args]
   
   )

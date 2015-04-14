@@ -1,0 +1,8 @@
+{
+  :username "bar" :password "foo"
+  :envs [:dev :qa :prod] 
+  :roles #{:celestial.roles/user} 
+  :operations #{
+     :reload :destroy :provision :stage :run-action :create :start :stop :clear :clone
+  }
+}

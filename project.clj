@@ -9,4 +9,6 @@
      [com.taoensso/timbre "2.6.3"]
      [org.clojure/clojure "1.6.0"]
   ]
+
+  :main celestial.populate
 )
