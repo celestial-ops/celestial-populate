@@ -13,10 +13,15 @@
   "A tool for populating Celestial with data in production envs"
   (:gen-class true)
   (:require 
+    [clojure.edn :as edn]
+    [clojure.java.io :refer [file]]
+    [clojure.core.strint :refer (<<)]
+    [taoensso.timbre :as timbre]
     [cheshire.core :refer :all]
     [slingshot.slingshot :refer  [throw+ try+]]
-    [celestial.common :refer (import-logging)]
     [org.httpkit.client :as client]))
+
+(timbre/refer-timbre)
 
 (defn call [verb root api args auth-headers]
   (let [{:keys [body error status] :as res} @(verb (<< "~(root)~{api}") (merge args {:headers auth-headers}))]
@@ -24,20 +29,28 @@
     (throw+ (assoc res :type ::call-failed)))
   (:data (parse-string body true))))
 
-(import-logging)
-
 (defn add-user 
    "Adding a user" 
-   [args]
+   [u]
   )
 
 (defn add-type 
    "Adding a type" 
-   [args]
+   [t]
   )
+
+(defmulti add (fn [m] (keys m)))
+(defmethod add [:puppet-std :type :classes] [m] (add-type m))
+(defmethod add [:username :envs :roles :operations] [m] (add-user m))
+(defmethod add :default [m] )
+
+(defn files [path]
+  (map (comp edn/read-string slurp) (filter #(.isFile %) (file-seq path))))
 
 (defn -main 
   "import files from path matching expected structure"
   [path & args]
-  
-  )
+   (doseq [f  (files (file path))]))
+
+
+(clojure.pprint/pprint (files (file "data/example")))
