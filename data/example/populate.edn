@@ -1,5 +1,5 @@
 {
- :host "celestial" 
- :user "importer"
- :password "nei5Odia"
+ :host "localhost" 
+ :user "admin"
+ :password "changeme"
 }
