@@ -9,8 +9,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.)
 
-(ns celestial.populate
-  "A tool for populating Celestial with data in production envs"
+(ns populous.core
+  "A tool for populating Celestial with data"
   (:gen-class true)
   (:require 
     [clojure.edn :as edn]
@@ -32,25 +32,28 @@
 (defn add-user 
    "Adding a user" 
    [u]
+   (info "adding user" u)
   )
 
 (defn add-type 
    "Adding a type" 
    [t]
+   (info "adding type" t)
   )
 
 (defmulti add (fn [m] (keys m)))
 (defmethod add [:puppet-std :type :classes] [m] (add-type m))
-(defmethod add [:username :envs :roles :operations] [m] (add-user m))
-(defmethod add :default [m] )
+(defmethod add [:username :password :envs :roles :operations] [m] (add-user m))
+(defmethod add :default [m] (info "nothing to add for" m))
 
-(defn files [path]
+(defn data [path]
   (map (comp edn/read-string slurp) (filter #(.isFile %) (file-seq path))))
 
 (defn -main 
   "import files from path matching expected structure"
   [path & args]
-   (doseq [f  (files (file path))]))
+   (doseq [item (data (file path))] (add item)))
 
 
-(clojure.pprint/pprint (files (file "data/example")))
+(clojure.pprint/pprint (data (file "data/example")))
+(-main "data/example")
