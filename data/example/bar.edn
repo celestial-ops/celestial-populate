@@ -1,0 +1,6 @@
+{
+  :username "bar" :password "foo"
+  :envs ["dev" "qa" "prod"] 
+  :roles ["user"]
+  :operations ["reload"]
+}
