@@ -12,5 +12,5 @@
      [org.clojure/clojure "1.6.0"]
   ]
 
-  :main celestial.populate
+  :main populous.core
 )

@@ -33,17 +33,17 @@
 (defn add-user 
    "Adding a user" 
    [u root auth]
-   (info "adding user" u)
-   (call client/post root "/users" {:form-params u :basic-auth auth :content-type :json}))
+    (call client/post root "/users" {:form-params u :basic-auth auth :content-type :json})
+    (info "added user" u))
 
 (defn add-type 
    "Adding a type" 
-   [t]
-   (info "adding type" t)
-  )
+   [t root auth]
+    (call client/post root "/types" {:form-params t :basic-auth auth :content-type :json})
+    (info "added type" t))
 
 (defmulti add (fn [root auth m] (keys m)))
-(defmethod add [:puppet-std :type :classes] [root auth m] (add-type m))
+(defmethod add [:puppet-std :type :classes] [root auth m] (add-type m root auth))
 (defmethod add [:username :password :envs :roles :operations] [root auth m] (add-user m root auth))
 (defmethod add :default [root auth m] (info "nothing to add for" m))
 
