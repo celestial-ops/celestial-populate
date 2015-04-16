@@ -19,21 +19,22 @@
     [taoensso.timbre :as timbre]
     [cheshire.core :refer :all]
     [slingshot.slingshot :refer  [throw+ try+]]
-    [org.httpkit.client :as client]))
+    [clj-http.client :as client]))
 
 (timbre/refer-timbre)
 
-(defn call [verb root api args auth-headers]
-  (let [{:keys [body error status] :as res} @(verb (<< "~(root)~{api}") (merge args {:headers auth-headers}))]
-  (when-not (= status 200) 
-    (throw+ (assoc res :type ::call-failed)))
-  (:data (parse-string body true))))
+(defn call [verb root api args]
+  (let [{:keys [body error status] :as res} (verb (str root api) (merge args {:insecure? true}))]
+    (when-not (= status 200) 
+      (throw+ (assoc res :type ::call-failed)))
+    (info status)
+    (:data (parse-string body true))))
 
 (defn add-user 
    "Adding a user" 
-   [u]
+   [u root auth]
    (info "adding user" u)
-  )
+   (call client/post root "/users" {:form-params u :basic-auth auth :content-type :json}))
 
 (defn add-type 
    "Adding a type" 
@@ -41,19 +42,18 @@
    (info "adding type" t)
   )
 
-(defmulti add (fn [m] (keys m)))
-(defmethod add [:puppet-std :type :classes] [m] (add-type m))
-(defmethod add [:username :password :envs :roles :operations] [m] (add-user m))
-(defmethod add :default [m] (info "nothing to add for" m))
+(defmulti add (fn [root auth m] (keys m)))
+(defmethod add [:puppet-std :type :classes] [root auth m] (add-type m))
+(defmethod add [:username :password :envs :roles :operations] [root auth m] (add-user m root auth))
+(defmethod add :default [root auth m] (info "nothing to add for" m))
 
 (defn data [path]
   (map (comp edn/read-string slurp) (filter #(.isFile %) (file-seq path))))
 
 (defn -main 
   "import files from path matching expected structure"
-  [path & args]
-   (doseq [item (data (file path))] (add item)))
+  [path conf & args]
+   (let [{:keys [host user password]} (edn/read-string (slurp conf))]
+     (doseq [item (data (file path))] (add host [user password ] item))))
 
-
-(clojure.pprint/pprint (data (file "data/example")))
-(-main "data/example")
+(-main "data/example" "data/example/conf/populate.edn")
