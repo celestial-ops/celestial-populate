@@ -29,21 +29,30 @@
   (let [{:keys [body error status] :as resp} (verb (str root api) (merge args defaults))
          resp-body (parse-string body true)]
     (when-not (= status 200) 
-      (throw+ (assoc resp-body :type ::call-failed)))
-    (info status resp-body)
+      (throw+ (merge resp-body {:type ::call-failed})))
     ))
 
 (defn add-user 
    "Adding a user" 
-   [u root auth]
-    (call client/post root "/users" {:form-params u :basic-auth auth :content-type :json})
-    (info "added user" u))
+   [{:keys [username] :as u} root auth]
+    (try+
+       (call client/post root "/users" {:form-params u :basic-auth auth :content-type :json})
+       (info "added user" u)
+      (catch [:type ::call-failed] {:keys [object]}
+        (when (= :celestial.persistency.users/conflicting-user  (keyword (:type object)))
+          (info "updated user" u)
+          (call client/put root "/users" {:form-params u :basic-auth auth :content-type :json}))))
+      )
 
 (defn add-type 
    "Adding a type" 
    [t root auth]
-    (call client/post root "/types" {:form-params t :basic-auth auth :content-type :json})
-    (info "added type" t))
+    (try+ 
+      (call client/post root "/types" {:form-params t :basic-auth auth :content-type :json})
+      (catch [:type ::call-failed] {:keys [object]}
+        (when (= :celestial.persistency.types/conflicting-type  (keyword (:type object)))
+          (info "updated type" t)
+          (call client/put root "/types" {:form-params t :basic-auth auth :content-type :json})))))
 
 (defmulti add (fn [root auth m] (keys m)))
 (defmethod add [:puppet-std :type :classes] [root auth m] (add-type m root auth))
