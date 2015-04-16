@@ -1,5 +1,5 @@
 {
- :host "localhost" 
+ :host "https://localhost:8443" 
  :user "admin"
  :password "changeme"
 }
