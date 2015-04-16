@@ -23,12 +23,15 @@
 
 (timbre/refer-timbre)
 
+(def defaults {:insecure? true :throw-exceptions false})
+
 (defn call [verb root api args]
-  (let [{:keys [body error status] :as res} (verb (str root api) (merge args {:insecure? true}))]
+  (let [{:keys [body error status] :as resp} (verb (str root api) (merge args defaults))
+         resp-body (parse-string body true)]
     (when-not (= status 200) 
-      (throw+ (assoc res :type ::call-failed)))
-    (info status)
-    (:data (parse-string body true))))
+      (throw+ (assoc resp-body :type ::call-failed)))
+    (info status resp-body)
+    ))
 
 (defn add-user 
    "Adding a user" 
@@ -56,4 +59,4 @@
    (let [{:keys [host user password]} (edn/read-string (slurp conf))]
      (doseq [item (data (file path))] (add host [user password ] item))))
 
-;; (-main "data/example" "data/example/conf/populate.edn")
+(-main "data/example" "data/example/conf/populate.edn")
