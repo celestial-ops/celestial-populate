@@ -68,4 +68,4 @@
    (let [{:keys [host user password]} (edn/read-string (slurp conf))]
      (doseq [item (data (file path))] (add host [user password ] item))))
 
-(-main "data/example" "data/example/conf/populate.edn")
+#_(-main "data/example" "data/example/conf/populate.edn")
