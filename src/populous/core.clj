@@ -82,7 +82,9 @@
   "import files from path matching expected structure"
   [path conf & args]
    (let [{:keys [host user password]} (edn/read-string (slurp conf))]
-     (doall (doseq [item (data (file path))] 
-       (info item) 
-       (add host [user password ] item)))))
+     (doseq [item (doall (data (file path)))] 
+       (add host [user password ] item)))
+    (info "done adding items")
+    (System/exit 0)
+    )
 
