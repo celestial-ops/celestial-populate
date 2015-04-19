@@ -49,14 +49,27 @@
    [t root auth]
     (try+ 
       (call client/post root "/types" {:form-params t :basic-auth auth :content-type :json})
+      (info "added type" t)
       (catch [:type ::call-failed] {:keys [object]}
         (when (= :celestial.persistency.types/conflicting-type  (keyword (:type object)))
           (info "updated type" t)
           (call client/put root "/types" {:form-params t :basic-auth auth :content-type :json})))))
 
+(defn add-action
+   "Adding a type" 
+   [a root auth]
+    (try+ 
+      (call client/post root "/actions" {:form-params a :basic-auth auth :content-type :json})
+      (info "added action" a)
+      (catch [:type ::call-failed] {:keys [object]}
+        (when (= :celestial.persistency.types/conflicting-type  (keyword (:type object)))
+          (info "updated action" a)
+          (call client/put root "/actions" {:form-params a :basic-auth auth :content-type :json})))))
+
 (defmulti add (fn [root auth m] (keys m)))
 (defmethod add [:puppet-std :type :classes] [root auth m] (add-type m root auth))
 (defmethod add [:username :password :envs :roles :operations] [root auth m] (add-user m root auth))
+(defmethod add [:operates-on :src :capistrano :timeout :name] [root auth m] (add-action m root auth))
 (defmethod add :default [root auth m] (info "nothing to add for" m))
 
 (defn data [path]
@@ -69,3 +82,4 @@
      (doall (doseq [item (data (file path))] 
        (info item) 
        (add host [user password ] item)))))
+
