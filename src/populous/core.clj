@@ -66,6 +66,6 @@
   "import files from path matching expected structure"
   [path conf & args]
    (let [{:keys [host user password]} (edn/read-string (slurp conf))]
-     (doseq [item (data (file path))] (add host [user password ] item))))
-
-#_(-main "data/example" "data/example/conf/populate.edn")
+     (doall (doseq [item (data (file path))] 
+       (info item) 
+       (add host [user password ] item)))))
