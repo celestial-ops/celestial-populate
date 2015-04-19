@@ -28,6 +28,9 @@
 (defn call [verb root api args]
   (let [{:keys [body error status] :as resp} (verb (str root api) (merge args defaults))
          resp-body (parse-string body true)]
+    (when (= status 401)
+      (throw+ {:type ::un-autorized}) 
+      )
     (when-not (= status 200) 
       (throw+ (merge resp-body {:type ::call-failed})))
     ))
@@ -56,13 +59,13 @@
           (call client/put root "/types" {:form-params t :basic-auth auth :content-type :json})))))
 
 (defn add-action
-   "Adding a type" 
+   "Adding an action" 
    [a root auth]
     (try+ 
       (call client/post root "/actions" {:form-params a :basic-auth auth :content-type :json})
       (info "added action" a)
       (catch [:type ::call-failed] {:keys [object]}
-        (when (= :celestial.persistency.types/conflicting-type  (keyword (:type object)))
+        (when (= :celestial.persistency.actions/conflicting-action  (keyword (:type object)))
           (info "updated action" a)
           (call client/put root "/actions" {:form-params a :basic-auth auth :content-type :json})))))
 
