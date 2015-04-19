@@ -5,10 +5,10 @@
   
   :dependencies [
      [cheshire "5.4.0"]
-     [slingshot "0.10.3" ]
+     [slingshot "0.12.2" ]
      [org.clojure/core.incubator "0.1.3"]
      [clj-http "1.1.0"]
-     [com.taoensso/timbre "2.6.3"]
+     [com.taoensso/timbre "3.4.0"]
      [org.clojure/clojure "1.6.0"]
   ]
 
