@@ -65,7 +65,7 @@
       (call client/post root "/actions" {:form-params a :basic-auth auth :content-type :json})
       (info "added action" a)
       (catch [:type ::call-failed] {:keys [object]}
-        (when (= :celestial.persistency.actions/conflicting-action  (keyword (:type object)))
+        (when (= :celestial.persistency.actions/duplicated-action (keyword (:type object)))
           (info "updated action" a)
           (call client/put root "/actions" {:form-params a :basic-auth auth :content-type :json})))))
 
