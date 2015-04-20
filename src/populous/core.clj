@@ -29,10 +29,10 @@
   (let [{:keys [body error status] :as resp} (verb (str root api) (merge args defaults))
          resp-body (parse-string body true)]
     (when (= status 401)
-      (throw+ {:type ::un-autorized}) 
-      )
+      (throw+ {:type ::un-autorized}))
     (when-not (= status 200) 
       (throw+ (merge resp-body {:type ::call-failed})))
+    resp-body
     ))
 
 (defn add-user 
@@ -58,16 +58,22 @@
           (info "updated type" t)
           (call client/put root "/types" {:form-params t :basic-auth auth :content-type :json})))))
 
+(defn action-by-name [action operates-on root auth ]
+  (first 
+    (filter (fn [[k {:keys [name] :as v}]] (= name action))
+      (call client/get root (str "/actions/type/" operates-on) {:basic-auth auth :content-type :json}))))
+
 (defn add-action
    "Adding an action" 
-   [a root auth]
+   [{:keys [operates-on name] :as a} root auth]
     (try+ 
       (call client/post root "/actions" {:form-params a :basic-auth auth :content-type :json})
       (info "added action" a)
       (catch [:type ::call-failed] {:keys [object]}
         (when (= :celestial.persistency.actions/duplicated-action (keyword (:type object)))
-          (info "updated action" a)
-          (call client/put root "/actions" {:form-params a :basic-auth auth :content-type :json})))))
+          (let [[id _] (action-by-name name operates-on root auth)]
+            (call client/put root (str "/actions/" (Integer. (clojure.core/name id))) {:form-params a :basic-auth auth :content-type :json})
+            (info "updated action" a))))))
 
 (defmulti add (fn [root auth m] (keys m)))
 (defmethod add [:puppet-std :type :classes] [root auth m] (add-type m root auth))
@@ -85,6 +91,9 @@
      (doseq [item (doall (data (file path)))] 
        (add host [user password ] item)))
     (info "done adding items")
-    (System/exit 0)
-    )
+    (System/exit 0))
 
+
+
+
+  
