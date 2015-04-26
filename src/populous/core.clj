@@ -76,9 +76,9 @@
             (info "updated action" a))))))
 
 (defmulti add (fn [root auth m] (keys m)))
-(defmethod add [:puppet-std :type :classes] [root auth m] (add-type m root auth))
+(defmethod add [:puppet-std :type :classes :description] [root auth m] (add-type m root auth))
 (defmethod add [:username :password :envs :roles :operations] [root auth m] (add-user m root auth))
-(defmethod add [:operates-on :src :capistrano :timeout :name] [root auth m] (add-action m root auth))
+(defmethod add [:operates-on :src :capistrano :timeout :name :description] [root auth m] (add-action m root auth))
 (defmethod add :default [root auth m] (info "nothing to add for" m))
 
 (defn data [path]
