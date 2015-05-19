@@ -37,24 +37,24 @@
 
 (defn add-user 
    "Adding a user" 
-   [{:keys [username] :as u} root auth]
+   [{:keys [username] :as u} root auth up]
     (try+
        (call client/post root "/users" {:form-params u :basic-auth auth :content-type :json})
        (info "added user" u)
       (catch [:type ::call-failed] {:keys [object]}
-        (when (= :celestial.persistency.users/conflicting-user  (keyword (:type object)))
+        (when (and (= :celestial.persistency.users/conflicting-user (keyword (:type object))) up)
           (info "updated user" u)
           (call client/put root "/users" {:form-params u :basic-auth auth :content-type :json}))))
       )
 
 (defn add-type 
    "Adding a type" 
-   [t root auth]
+   [t root auth up]
     (try+ 
       (call client/post root "/types" {:form-params t :basic-auth auth :content-type :json})
       (info "added type" t)
       (catch [:type ::call-failed] {:keys [object]}
-        (when (= :celestial.persistency.types/conflicting-type  (keyword (:type object)))
+        (when (and (= :celestial.persistency.types/conflicting-type  (keyword (:type object))) up)
           (info "updated type" t)
           (call client/put root "/types" {:form-params t :basic-auth auth :content-type :json})))))
 
@@ -65,20 +65,20 @@
 
 (defn add-action
    "Adding an action" 
-   [{:keys [operates-on name] :as a} root auth]
+   [{:keys [operates-on name] :as a} root auth up]
     (try+ 
       (call client/post root "/actions" {:form-params a :basic-auth auth :content-type :json})
       (info "added action" a)
       (catch [:type ::call-failed] {:keys [object]}
-        (when (= :celestial.persistency.actions/duplicated-action (keyword (:type object)))
+        (when (and (= :celestial.persistency.actions/duplicated-action (keyword (:type object))) up)
           (let [[id _] (action-by-name name operates-on root auth)]
             (call client/put root (str "/actions/" (Integer. (clojure.core/name id))) {:form-params a :basic-auth auth :content-type :json})
             (info "updated action" a))))))
 
-(defmulti add (fn [root auth m] (keys m)))
-(defmethod add [:puppet-std :type :classes :description] [root auth m] (add-type m root auth))
-(defmethod add [:username :password :envs :roles :operations] [root auth m] (add-user m root auth))
-(defmethod add [:operates-on :src :capistrano :timeout :name :description] [root auth m] (add-action m root auth))
+(defmulti add (fn [root auth m up] (keys m)))
+(defmethod add [:puppet-std :type :classes :description] [root auth m up] (add-type m root auth up))
+(defmethod add [:username :password :envs :roles :operations] [root auth m up] (add-user m root auth up))
+(defmethod add [:operates-on :src :capistrano :timeout :name :description] [root auth m up] (add-action m root auth up))
 (defmethod add :default [root auth m] (info "nothing to add for" m))
 
 (defn data [path]
@@ -87,9 +87,9 @@
 (defn -main 
   "import files from path matching expected structure"
   [path conf & args]
-   (let [{:keys [host user password]} (edn/read-string (slurp conf))]
+   (let [{:keys [host user password update]} (edn/read-string (slurp conf))]
      (doseq [item (doall (data (file path)))] 
-       (add host [user password ] item)))
+       (add host [user password ] item update)))
     (info "done adding items")
     (System/exit 0))
 
