@@ -12,5 +12,7 @@
      [org.clojure/clojure "1.6.0"]
   ]
 
+  :aot [populous.migrate]
+
   :main populous.core
 )
