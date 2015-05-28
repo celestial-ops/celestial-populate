@@ -13,7 +13,7 @@
   (:require 
     [clojure.edn :as edn]
     [clojure.java.io :refer [file]]
-    [populous.common :refer (add-type get-types get-type update-type delete-type)]
+    [populous.common :refer (add-type get-types get-type update-type delete-type update-system get-systems get-system)]
     [taoensso.timbre :as timbre]
     )
   )
@@ -39,31 +39,33 @@
 
 (defn merge-type 
    "merges type into another" 
-   [t root auth]
-   (info "insert folding dest")
-   (let [dest (get-type (read-line) root auth)]
-     (if (is-normalized? dest)
-       (merge-with merger (normalize t)  dest) 
-       (merge-with merger (normalize t) (normalize dest)) 
-       ) 
-    ))
+   [t dest root auth]
+    (if (is-normalized? dest)
+      (merge-with merger (normalize t)  dest) 
+      (merge-with merger (normalize t) (normalize dest))))
+
+(defn update-system-types
+   "updated systems with dest type (in case of fold)" 
+   [source dest root auth]
+   (doseq [id (:ids (get-systems source root auth)) :let [s (get-system id root auth)]]
+      (update-system id (assoc s :type dest) root auth)))
 
 (defn types-2
   "2.0 types migration"
   [root auth]
   (doseq [{:keys [type description] :as t}  (:types (get-types root auth))]
     (when-not (is-normalized? t)
-      (info type "-" description "isn't migrated, insert either fold or norm")  
-      (case (read-line)
-        "fold" 
-           (do 
-             (update-type (merge-type t root auth) root auth)
-             (delete-type type root auth))
-        "norm" (update-type (normalize t) root auth)
-      ))
-    ))
-
-;; (types-2 "https://localhost:8443" ["admin" "changeme"])
+      (info type "-" description "isn't migrated, insert either f (fold), n (norm), s (skip)")  
+      (case (keyword (read-line))
+        :f
+        (do (info "insert folding dest")
+            (let [dest (get-type (read-line) root auth)]
+              (update-type (merge-type t dest root auth) root auth)
+              (delete-type type root auth)
+              (update-system-types type (:type dest) root auth)))
+        :n (update-type (normalize t) root auth)
+        :s identity
+        ))))
 
 (defn -main 
   [conf & args]

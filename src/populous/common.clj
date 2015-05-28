@@ -23,14 +23,12 @@
 (def defaults {:insecure? true :throw-exceptions false})
 
 (defn call [verb root api args]
-  (let [{:keys [body error status] :as resp} (verb (str root api) (merge args defaults))
-         resp-body (parse-string body true)]
+  (let [{:keys [body error status] :as resp} (verb (str root api) (merge args defaults))]
     (when (= status 401)
       (throw+ {:type ::un-autorized}))
     (when-not (= status 200) 
-      (throw+ (merge resp-body {:type ::call-failed})))
-     resp-body
-    ))
+      (throw+ (merge (parse-string body true) {:type ::call-failed})))
+    (parse-string body true)))
 
 (defn update-user [u root auth]
   (call client/put root "/users" {:form-params {:user u} :basic-auth auth :content-type :json}))
@@ -65,7 +63,6 @@
 
 (defn update-type 
   [t root auth]
-  (debug t)
   (call client/put root "/types" {:form-params t :basic-auth auth :content-type :json}))
 
 (defn add-type
@@ -92,7 +89,8 @@
 
 (defn add-action
   ([a root auth]
-   (call client/post root "/actions" {:form-params a :basic-auth auth :content-type :json}))
+   (call client/post root "/actions" 
+      {:form-params a :basic-auth auth :content-type :json}))
   ([{:keys [operates-on name] :as a} root auth up]
    (try+ 
      (add-action a root auth)
@@ -102,3 +100,16 @@
          (let [[id _] (action-by-name name operates-on root auth)]
            (update-action id a root auth) 
            (info "updated action" a)))))))
+
+(defn get-systems 
+   [t root auth]
+   (call client/get root (<< "/systems/type/~{t}") {:basic-auth auth :content-type :json}))
+
+(defn get-system
+   [id root auth]
+   (call client/get root (<< "/systems/~{id}") {:basic-auth auth :content-type :json}))
+
+(defn update-system
+   [id s root auth]
+   (call client/put root (<< "/systems/~{id}") {:form-params s :basic-auth auth :content-type :json})
+  )
