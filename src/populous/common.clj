@@ -82,9 +82,15 @@
     (filter (fn [[k {:keys [name] :as v}]] (= name action))
       (call client/get root (str "/actions/type/" operates-on) {:basic-auth auth :content-type :json}))))
 
+(defn get-actions
+   "grab all actions for type" 
+   [root auth type]
+  (call client/get root (str "/actions/type/" type) {:basic-auth auth :content-type :json}))
+
+
 (defn update-action 
-  [id a root auth]
-  (call client/put root (str "/actions/" (Integer. (clojure.core/name id)))
+  [root auth id a]
+  (call client/put root (str "/actions/" id)
         {:form-params a :basic-auth auth :content-type :json}))
 
 (defn add-action
@@ -98,7 +104,7 @@
      (catch [:type ::call-failed] {:keys [object]}
        (when (and (= :celestial.persistency.actions/duplicated-action (keyword (:type object))) up)
          (let [[id _] (action-by-name name operates-on root auth)]
-           (update-action id a root auth) 
+           (update-action root auth (Integer. (clojure.core/name id)) a) 
            (info "updated action" a)))))))
 
 (defn get-systems 
