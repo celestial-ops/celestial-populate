@@ -13,7 +13,7 @@
   (:require 
     [clojure.edn :as edn]
     [clojure.java.io :refer [file]]
-    [populous.common :refer (add-type get-types get-type update-type delete-type update-system get-systems get-system)]
+    [populous.common :refer :all]
     [taoensso.timbre :as timbre]
     )
   )
@@ -66,6 +66,18 @@
         :n (update-type (normalize t) root auth)
         :s identity
         ))))
+
+(defn actions-2 
+   "2.0 actions migrations"
+   [root auth r env]
+  (let [ts (:types (get-types root auth)) 
+        actions (reduce (fn [m v] (merge m (get-actions root auth (:type v)))) {} ts)] 
+    (doseq [[id a] actions :let [{:keys [args]} (a r) src (a :src)]]
+     (clojure.pprint/pprint (-> a (dissoc r) (dissoc :src) (assoc  r {env {:src src :args args}})))
+      #_(update-action root auth id)    
+      )
+    )
+  )
 
 (defn -main 
   [conf & args]
