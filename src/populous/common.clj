@@ -90,8 +90,7 @@
 
 (defn update-action 
   [root auth id a]
-  (call client/put root (str "/actions/" id)
-        {:form-params a :basic-auth auth :content-type :json}))
+  (call client/put root (str "/actions/" id) {:form-params a :basic-auth auth :content-type :json}))
 
 (defn add-action
   ([a root auth]
