@@ -72,10 +72,11 @@
    [root auth r env]
   (let [ts (:types (get-types root auth)) 
         actions (reduce (fn [m v] (merge m (get-actions root auth (:type v)))) {} ts)] 
-    (doseq [[id a] actions :let [{:keys [args]} (a r) src (a :src)]]
-     (clojure.pprint/pprint (-> a (dissoc r) (dissoc :src) (assoc  r {env {:src src :args args}})))
-      #_(update-action root auth id)    
-      )
+    (doall (doseq [[id a] actions :let [{:keys [args]} (a r) src (a :src)]]
+        (update-action root auth (Integer. (name id)) 
+           (-> a (dissoc r) (dissoc :provided) (dissoc :timeout) 
+             (assoc r {env {:timeout (a :timeout) :args args}})))
+      ))
     )
   )
 
